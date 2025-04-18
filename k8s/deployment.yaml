@@ -1,4 +1,29 @@
 
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: file-manager-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  hostPath:
+    path: "/mnt/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: file-manager-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -20,6 +45,13 @@ spec:
         image: file-manager:latest
         ports:
         - containerPort: 80
+        volumeMounts:
+        - name: file-storage
+          mountPath: /usr/share/nginx/html/uploads
+      volumes:
+      - name: file-storage
+        persistentVolumeClaim:
+          claimName: file-manager-pvc
 ---
 apiVersion: v1
 kind: Service
@@ -33,3 +65,4 @@ spec:
       port: 80
       targetPort: 80
   type: LoadBalancer
+
